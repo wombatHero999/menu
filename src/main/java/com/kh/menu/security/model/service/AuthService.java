@@ -1,12 +1,18 @@
 package com.kh.menu.security.model.service;
 
+import java.util.List;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.menu.security.model.dao.AuthDao;
 import com.kh.menu.security.model.dto.AuthDto.AuthResult;
+import com.kh.menu.security.model.dto.AuthDto.LoginRequest;
 import com.kh.menu.security.model.dto.AuthDto.User;
+import com.kh.menu.security.model.dto.AuthDto.UserAuthority;
+import com.kh.menu.security.model.dto.AuthDto.UserCredential;
 import com.kh.menu.security.model.provider.JWTProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -53,6 +59,46 @@ public class AuthService {
 				.accessToken(accessToken)
 				.refreshToken(refreshToken)
 				.user(userNoPassword)
+				.build();
+	}
+
+	@Transactional
+	public AuthResult signup(LoginRequest req) {
+		String email = req.getEmail();
+		String password = req.getPassword();
+		
+		// 1) Users테이블에 데이터 추가
+		User user = User.builder()
+						.email(email)
+						.name(email.split("@")[0])
+						.build();	
+		authDao.insertUser(user);
+		
+		// 2) Credentail에 데이터 추가
+		UserCredential cred = UserCredential
+								.builder()
+								.userId(user.getId())
+								.password(encoder.encode(password))
+								.build();
+		authDao.insertCred(cred);
+		// 3) 권한추가
+		UserAuthority auth = UserAuthority
+								.builder()
+								.userId(user.getId())
+								.roles(List.of("ROLE_USER"))
+								.build();
+		authDao.insertUserRole(auth);		
+		
+		// 4) 회원가입 완료 후 , 토큰 발급
+		String accessToken = jwt.createAccessToken(user.getId() , 30);
+		String refreshToken = jwt.createRefreshToken(user.getId(), 7);
+		
+		user = authDao.findUserByUserId(user.getId()); // 비밀번호제외 유저정보
+		
+		return AuthResult.builder()
+				.accessToken(accessToken)
+				.refreshToken(refreshToken)
+				.user(user)
 				.build();
 	}
 

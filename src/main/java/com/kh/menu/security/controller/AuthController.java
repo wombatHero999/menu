@@ -63,6 +63,19 @@ public class AuthController {
 		}
 	}
 	
+	/*
+	 * 자동 회원가입
+	 *  */
+	@PostMapping("/signup")
+	public ResponseEntity<AuthResult> signup(
+			@RequestBody LoginRequest req){
+		
+		AuthResult result = service.signup(req);
+		return makeResponse(result);
+	}
+	
+	
+	
 	
 	private ResponseEntity<AuthResult> makeResponse(AuthResult result){
 		// AccessToken을 쿠키에 담아서 전달
