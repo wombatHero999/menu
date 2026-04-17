@@ -1,7 +1,15 @@
 package com.kh.menu.security.controller;
 
+import static com.kh.menu.security.utils.CookieUtil.ACCESS_COOKIE;
+import static com.kh.menu.security.utils.CookieUtil.REFERSH_COOKIE;
+import static com.kh.menu.security.utils.CookieUtil.ROLE_COOKIE;
+import static com.kh.menu.security.utils.CookieUtil.createTokenCookie;
+
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,11 +57,33 @@ public class AuthController {
 			AuthResult result = service.login(req.getEmail(), req.getPassword());
 			
 			// 인증성공시 accessToken, refreshToken생성하여 클라이언트의 쿠키로 전달.
-			return ;
+			return makeResponse(result);
 		}catch(BadCredentialsException e) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 		}
 	}
+	
+	
+	private ResponseEntity<AuthResult> makeResponse(AuthResult result){
+		// AccessToken을 쿠키에 담아서 전달
+		ResponseCookie accessCookie = 
+				createTokenCookie(ACCESS_COOKIE, result.getAccessToken(),30);
+		ResponseCookie refreshCookie =
+				createTokenCookie(REFERSH_COOKIE, result.getRefreshToken(), 7);
+		
+		String roles = result.getUser().getRoles()
+						.stream().collect(Collectors.joining("|"));
+		ResponseCookie roleCookie 
+			= createTokenCookie(ROLE_COOKIE, roles, 30);
+		
+		return ResponseEntity
+				.ok()
+				.header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+				.header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+				.header(HttpHeaders.SET_COOKIE, roleCookie.toString())
+				.body(result);
+	}
+	
 }
 
 
