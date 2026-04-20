@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.menu.security.model.dto.AuthDto.AuthResult;
 import com.kh.menu.security.model.dto.AuthDto.LoginRequest;
+import com.kh.menu.security.model.dto.AuthDto.User;
 import com.kh.menu.security.model.provider.JWTProvider;
 import com.kh.menu.security.model.service.AuthService;
 import com.kh.menu.security.model.service.KakaoService;
@@ -123,6 +126,65 @@ public class AuthController {
 				.header(HttpHeaders.SET_COOKIE, roles.toString())
 				.build();
 	}
+	
+	// accessToken재발급 url
+	@PostMapping("/refresh")
+	public ResponseEntity<AuthResult> refresh(
+			@CookieValue(name = REFERSH_COOKIE, required = false) 
+			String refreshCookie
+			){
+		if(refreshCookie == null || refreshCookie.isBlank()) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
+		
+		// 쿠키가 있으면 쿠키를 검증하여 새로운 accessToken생성
+		AuthResult result = service.refreshByCookie(refreshCookie);
+		
+		// 새로 발급된 토큰을 쿠키에 담기
+		ResponseCookie accessCookie = 
+				createTokenCookie(ACCESS_COOKIE, result.getAccessToken(), 30);
+
+		String roles = result.getUser().getRoles().stream()
+				.collect(Collectors.joining("|"));
+		
+		ResponseCookie roleCookie = 
+				createTokenCookie(ROLE_COOKIE, roles, 30);
+		
+		return ResponseEntity.ok()
+				.header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+				.header(HttpHeaders.SET_COOKIE, roleCookie.toString())
+				.body(result);
+	}
+	
+	
+	//사용자정보 요청용 api
+	@GetMapping("/me")
+	public ResponseEntity<User> getUserInfo(HttpServletRequest req){
+		// 요청헤더에서 토큰 추출
+		String accessToken = CookieUtil.resolveAccessToken(req);
+		if(accessToken == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
+		
+		// id추출
+		Long userId = jwt.getUserId(accessToken, ACCESS_COOKIE);
+		
+		// 사용자정보 조회
+		User user = service.findUserByUserId(userId);
+		
+		if(user == null) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		return ResponseEntity.ok(user);
+	}
+	
+	
+	
+	
+	
+	
+	
 }
 
 

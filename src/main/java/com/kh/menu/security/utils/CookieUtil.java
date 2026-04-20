@@ -23,7 +23,8 @@ public class CookieUtil {
 					maxAgeDays == 0	? Duration.ZERO :
 					name.equals(REFERSH_COOKIE) ?
 							Duration.ofDays(maxAgeDays)	:
-							Duration.ofMinutes(maxAgeDays)
+//							Duration.ofMinutes(maxAgeDays)
+							Duration.ofSeconds(10)	
 						)	//만료시간
 				.build();
 	}

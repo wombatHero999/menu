@@ -29,9 +29,9 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(
 			HttpSecurity http ,
-			JWTAutenticationFilter jwtFilter
-			// OAuth2Service service,
-			// OAuth2SuccessHandler handler
+			JWTAutenticationFilter jwtFilter,
+			OAuth2Service service,
+			OAuth2SuccessHandler handler
 			) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -47,6 +47,10 @@ public class SecurityConfig {
 			.sessionManagement( management -> 
 				management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			//. oauth2인증설정
+			.oauth2Login( oauth -> oauth
+					.userInfoEndpoint( u -> u.userService(service))
+					.successHandler(handler)					
+					)
 			.authorizeHttpRequests( auth ->
 					auth
 					.requestMatchers("/auth/login","/auth/signup","/auth/logout","/auth/refresh").permitAll()

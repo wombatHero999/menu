@@ -12,6 +12,7 @@ import com.kh.menu.security.model.dao.AuthDao;
 import com.kh.menu.security.model.dto.AuthDto.User;
 import com.kh.menu.security.model.provider.JWTProvider;
 import com.kh.menu.security.model.service.AuthService;
+import com.kh.menu.security.utils.CookieUtil;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -45,7 +46,7 @@ public class JWTAutenticationFilter extends OncePerRequestFilter {
 				log.debug("token : {} ", token);
 				
 				// 3) 토큰에서 userId추출
-				Long userId = jwt.getUserId(token);
+				Long userId = jwt.getUserId(token, CookieUtil.ACCESS_COOKIE);
 				log.debug("userId : {} ", userId);
 				
 				// 4) 사용자 정보 조회
