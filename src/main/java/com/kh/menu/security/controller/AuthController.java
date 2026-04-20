@@ -22,7 +22,9 @@ import com.kh.menu.security.model.dto.AuthDto.LoginRequest;
 import com.kh.menu.security.model.provider.JWTProvider;
 import com.kh.menu.security.model.service.AuthService;
 import com.kh.menu.security.model.service.KakaoService;
+import com.kh.menu.security.utils.CookieUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -97,6 +99,30 @@ public class AuthController {
 				.body(result);
 	}
 	
+	@PostMapping("/logout")
+	public ResponseEntity<Void> logout(HttpServletRequest req){
+		// 클라이언트의 헤더에서 토큰 추출
+		String accessToken = CookieUtil.resolveAccessToken(req);
+		
+		if(accessToken != null) {
+			// accessToken에 값이 있다면 카카오서비스 로그아웃 요청
+			
+		}
+		
+		// 로그아웃처리(쿠키 만료처리)
+		ResponseCookie refresh = createTokenCookie
+				(REFERSH_COOKIE, "", 0);
+		ResponseCookie access = createTokenCookie
+				(ACCESS_COOKIE, "", 0);
+		ResponseCookie roles = createTokenCookie
+				(ROLE_COOKIE, "", 0);
+		return ResponseEntity
+				.noContent()
+				.header(HttpHeaders.SET_COOKIE, refresh.toString())
+				.header(HttpHeaders.SET_COOKIE, access.toString())
+				.header(HttpHeaders.SET_COOKIE, roles.toString())
+				.build();
+	}
 }
 
 

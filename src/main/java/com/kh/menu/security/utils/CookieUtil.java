@@ -4,6 +4,8 @@ import java.time.Duration;
 
 import org.springframework.http.ResponseCookie;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 public class CookieUtil {
 	public static final String ACCESS_COOKIE = "accessToken";
 	public static final String REFERSH_COOKIE = "refreshToken";
@@ -26,6 +28,14 @@ public class CookieUtil {
 				.build();
 	}
 	
+	
+	public static String resolveAccessToken(HttpServletRequest req) {
+		String bearerToken = req.getHeader("Authorization");
+		if(bearerToken != null && bearerToken.startsWith("Bearer ")) {
+			return bearerToken.substring(7).trim();
+		}
+		return null;
+	}
 	
 	
 	
