@@ -1,5 +1,7 @@
 package com.kh.menu.security.model.dao;
 
+import java.util.Map;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -45,6 +47,10 @@ public class AuthDao {
 	
 	public String getKakaoAccessToken(long userId) {
 		return session.selectOne("auth.getKakaoAccessToken", userId);
+	}
+
+	public User findUserByProvider(Map<String, Object> param) {
+		return session.selectOne("auth.findUserByProvider",param);
 	}
 	
 	

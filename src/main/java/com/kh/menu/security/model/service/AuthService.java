@@ -120,6 +120,11 @@ public class AuthService {
 		return authDao.findUserByUserId(userId);
 	}
 
+
+	public String getKakaoAccessToken(Long userId) {
+		return authDao.getKakaoAccessToken(userId);
+	}
+
 }
 
 
